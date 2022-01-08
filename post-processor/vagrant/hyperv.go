@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 )
@@ -20,15 +19,15 @@ func (p *HypervProvider) Process(ui packersdk.Ui, artifact packersdk.Artifact, d
 	metadata = map[string]interface{}{"provider": "hyperv"}
 
 	// ui.Message(fmt.Sprintf("artifacts all: %+v", artifact))
-	var outputDir string
+	// ui.Message(fmt.Sprintf("dir: %+v", dir))
 
 	// Vargant requires specific dir structure for hyperv
 	// hyperv builder creates the structure in the output dir
 	// we have to keep the structure in a temp dir
-	// hack little bit but string in artifact usually have output dir
-	artifactString := artifact.String()
-	d := strings.Split(artifactString, ": ")
-	outputDir = d[1]
+	var outputDir string = getCommonDirectory(artifact.Files(), string(os.PathSeparator))
+	if len(outputDir) <= 1 {
+		return "", nil, fmt.Errorf("hyperv artifacts must have a common parent folder")
+	}
 	// ui.Message(fmt.Sprintf("artifact dir from string: %s", outputDir))
 
 	// Copy all of the original contents into the temporary directory
